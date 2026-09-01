@@ -281,6 +281,7 @@
       <button class="nav-item" data-page="clientes"><span class="ic">◈</span> Clientes</button>
       <button class="nav-item" data-page="produtos"><span class="ic">◧</span> Produtos</button>
       <button class="nav-item" data-page="vendas"><span class="ic">↗</span> Vendas / Contratos</button>
+      <button class="nav-item" data-page="recorrencias"><span class="ic">↻</span> Recorrências</button>
       <button class="nav-item" data-page="relatorios"><span class="ic">▥</span> Relatórios</button>
     </nav>
     <div class="save-indicator" id="saveIndicator"></div>
@@ -370,6 +371,28 @@
       </div>
       <div class="panel">
         <div class="table-wrap"><table id="salesTable"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ---------- RECORRÊNCIAS ---------- -->
+    <section class="page" id="page-recorrencias" style="display:none;">
+      <div class="topbar">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="hamburger" id="hamburger6">☰</button>
+          <div>
+            <div class="page-title">Controle de Recorrências</div>
+            <div class="page-sub">Acompanhe mês a mês os pagamentos dos contratos recorrentes</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="month" id="recorrMonth">
+          <button class="btn btn-outline" id="csvRecorrencias">Exportar CSV</button>
+        </div>
+      </div>
+      <div class="grid-cards" id="recorrStatCards"></div>
+      <div class="panel">
+        <div class="panel-head"><h3>Contratos recorrentes deste mês</h3></div>
+        <div class="table-wrap"><table id="recorrTable"><thead></thead><tbody></tbody></table></div>
       </div>
     </section>
 
@@ -501,6 +524,15 @@
         </div>
         <div class="field"><label>Valor (R$)</label><input type="number" id="saleValor" step="0.01" min="0"></div>
       </div>
+      <div class="grid-2" id="saleVencimentoWrap" style="display:none;">
+        <div class="field">
+          <label>Dia de vencimento (mensal)</label>
+          <input type="number" id="saleDiaVencimento" min="1" max="31" step="1" value="5">
+        </div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <div class="page-sub" style="margin:0;">Todo mês, no dia informado, este contrato entra no controle de recorrências para você dar baixa no pagamento.</div>
+        </div>
+      </div>
       <div class="grid-2">
         <div class="field"><label>Data de contratação</label><input type="date" id="saleDataInicio"></div>
         <div class="field"><label>Data de término (opcional)</label><input type="date" id="saleDataFim"></div>
@@ -525,6 +557,28 @@
     <div class="modal-foot">
       <button class="btn btn-ghost" data-close="saleModal">Cancelar</button>
       <button class="btn btn-gold" id="saveSale">Salvar contrato</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="paymentModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Registrar pagamento</h3><button class="modal-close" data-close="paymentModal">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="paySaleId">
+      <input type="hidden" id="payCompetencia">
+      <div class="field">
+        <label>Contrato</label>
+        <div id="payContractLabel" style="font-weight:600; color:var(--teal-900); padding:10px 0;"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Valor pago (R$)</label><input type="number" id="payValor" step="0.01" min="0"></div>
+        <div class="field"><label>Data do pagamento</label><input type="date" id="payData"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="paymentModal">Cancelar</button>
+      <button class="btn btn-gold" id="savePayment">Confirmar baixa</button>
     </div>
   </div>
 </div>
@@ -611,7 +665,7 @@ function toast(msg, danger){
 /* ========================================================
    NAVIGATION
    ======================================================== */
-const pages = ['dashboard','clientes','produtos','vendas','relatorios'];
+const pages = ['dashboard','clientes','produtos','vendas','recorrencias','relatorios'];
 function goToPage(page){
   state.currentPage = page;
   pages.forEach(p => document.getElementById('page-'+p).style.display = (p===page ? 'block':'none'));
@@ -622,12 +676,13 @@ function goToPage(page){
   if(page==='clientes') renderClients();
   if(page==='produtos') renderProducts();
   if(page==='vendas') renderSales();
+  if(page==='recorrencias') renderRecorrencias();
 }
 document.getElementById('navList').addEventListener('click', (e)=>{
   const btn = e.target.closest('.nav-item');
   if(btn) goToPage(btn.dataset.page);
 });
-['hamburger','hamburger2','hamburger3','hamburger4','hamburger5'].forEach(id=>{
+['hamburger','hamburger2','hamburger3','hamburger4','hamburger5','hamburger6'].forEach(id=>{
   const el = document.getElementById(id);
   if(el) el.addEventListener('click', ()=>{
     document.getElementById('sidebar').classList.add('open');
@@ -833,6 +888,12 @@ document.getElementById('saleParcelado').addEventListener('change', updateParcel
 document.getElementById('saleNumParcelas').addEventListener('input', calcParcelaInfo);
 document.getElementById('saleValor').addEventListener('input', ()=>{ if(document.getElementById('saleParcelado').value==='sim') calcParcelaInfo(); });
 
+function updateVencimentoUI(){
+  const mensal = document.getElementById('saleTipo').value === 'mensal';
+  document.getElementById('saleVencimentoWrap').style.display = mensal ? 'flex' : 'none';
+}
+document.getElementById('saleTipo').addEventListener('change', updateVencimentoUI);
+
 function openSaleModal(sale){
   refreshSelectOptions();
   document.getElementById('saleModalTitle').textContent = sale ? 'Editar contrato' : 'Novo contrato';
@@ -843,9 +904,11 @@ function openSaleModal(sale){
   document.getElementById('saleValor').value = sale ? sale.valor : (state.products[0]?.valorPadrao || '');
   document.getElementById('saleDataInicio').value = sale ? sale.dataContratacao : todayISO();
   document.getElementById('saleDataFim').value = sale ? (sale.dataTermino||'') : '';
+  document.getElementById('saleDiaVencimento').value = sale && sale.diaVencimento ? sale.diaVencimento : 5;
   document.getElementById('saleParcelado').value = sale && sale.parcelado ? 'sim' : 'nao';
   document.getElementById('saleNumParcelas').value = sale && sale.numParcelas ? sale.numParcelas : 2;
   updateParcelaUI();
+  updateVencimentoUI();
   openModal('saleModal');
 }
 document.getElementById('btnNewSale').addEventListener('click', ()=>{
@@ -861,19 +924,24 @@ document.getElementById('saveSale').addEventListener('click', async ()=>{
   const produtoId = document.getElementById('saleProduto').value;
   if(!clienteId || !produtoId){ toast('Selecione cliente e produto.', true); return; }
   const id = document.getElementById('saleId').value;
+  const tipo = document.getElementById('saleTipo').value;
   const parcelado = document.getElementById('saleParcelado').value === 'sim';
   const numParcelas = parcelado ? (parseInt(document.getElementById('saleNumParcelas').value) || 2) : 0;
   const valor = parseFloat(document.getElementById('saleValor').value) || 0;
+  const diaVencimento = tipo === 'mensal' ? Math.min(31, Math.max(1, parseInt(document.getElementById('saleDiaVencimento').value) || 5)) : null;
+  const existing = id ? state.sales.find(s=>s.id===id) : null;
   const data = {
     id: id || uid(),
     clienteId, produtoId,
-    tipo: document.getElementById('saleTipo').value,
+    tipo,
     valor,
     dataContratacao: document.getElementById('saleDataInicio').value || todayISO(),
     dataTermino: document.getElementById('saleDataFim').value || '',
     parcelado,
     numParcelas: parcelado ? numParcelas : 0,
-    valorParcela: parcelado && numParcelas ? valor / numParcelas : 0
+    valorParcela: parcelado && numParcelas ? valor / numParcelas : 0,
+    diaVencimento,
+    pagamentos: existing && existing.pagamentos ? existing.pagamentos : {}
   };
   if(id){
     const idx = state.sales.findIndex(s=>s.id===id);
@@ -912,10 +980,10 @@ function renderSales(){
   if(tipoF) list = list.filter(s=> s.tipo===tipoF);
   if(monthF) list = list.filter(s=> monthKey(s.dataContratacao)===monthF);
 
-  tbl.querySelector('thead').innerHTML = `<tr><th>Cliente</th><th>Produto</th><th>Tipo</th><th>Início</th><th>Término</th><th>Valor</th><th>Pagamento</th><th></th></tr>`;
+  tbl.querySelector('thead').innerHTML = `<tr><th>Cliente</th><th>Produto</th><th>Tipo</th><th>Início</th><th>Término</th><th>Venc.</th><th>Valor</th><th>Pagamento</th><th></th></tr>`;
   const tbody = tbl.querySelector('tbody');
   if(!list.length){
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="em-ic">↗</div><div class="em-title">Nenhum contrato encontrado</div>Registre uma venda ou ajuste os filtros.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="em-ic">↗</div><div class="em-title">Nenhum contrato encontrado</div>Registre uma venda ou ajuste os filtros.</div></td></tr>`;
     return;
   }
   tbody.innerHTML = list.map(s => `
@@ -925,6 +993,7 @@ function renderSales(){
       <td><span class="badge badge-${s.tipo}">${s.tipo==='mensal'?'Mensal':'Eventual'}</span></td>
       <td>${fmtDate(s.dataContratacao)}</td>
       <td>${s.dataTermino ? fmtDate(s.dataTermino) : '—'}</td>
+      <td>${s.tipo==='mensal' && s.diaVencimento ? 'Dia '+s.diaVencimento : '—'}</td>
       <td class="money">${fmtMoney(s.valor)}</td>
       <td style="font-size:12.5px; color:var(--muted);">${parcelaLabel(s)}</td>
       <td><div class="row-actions">
@@ -940,15 +1009,168 @@ document.getElementById('filterSaleTipo').addEventListener('change', renderSales
 document.getElementById('filterSaleMonth').addEventListener('change', renderSales);
 
 /* ========================================================
+   RECORRÊNCIAS — controle mensal de contratos recorrentes
+   ======================================================== */
+function isRecurringActiveInMonth(sale, monthStr){
+  if(sale.tipo !== 'mensal') return false;
+  const [y,m] = monthStr.split('-').map(Number);
+  const monthStart = `${monthStr}-01`;
+  const lastDay = new Date(y, m, 0).getDate();
+  const monthEnd = `${monthStr}-${String(lastDay).padStart(2,'0')}`;
+  if(sale.dataContratacao && sale.dataContratacao > monthEnd) return false;
+  if(sale.dataTermino && sale.dataTermino < monthStart) return false;
+  return true;
+}
+function recurringForMonth(monthStr){
+  return state.sales.filter(s => isRecurringActiveInMonth(s, monthStr))
+    .sort((a,b)=> (a.diaVencimento||0) - (b.diaVencimento||0));
+}
+function paymentFor(sale, monthStr){
+  return (sale.pagamentos && sale.pagamentos[monthStr]) || null;
+}
+function dueDateLabel(sale, monthStr){
+  const [y,m] = monthStr.split('-').map(Number);
+  const lastDay = new Date(y, m, 0).getDate();
+  const day = Math.min(sale.diaVencimento || 5, lastDay);
+  return `${String(day).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
+}
+
+function renderRecorrencias(){
+  const monthInput = document.getElementById('recorrMonth');
+  if(!monthInput.value) monthInput.value = todayISO().slice(0,7);
+  const monthStr = monthInput.value;
+  const list = recurringForMonth(monthStr);
+
+  const totalEsperado = list.reduce((s,c)=> s + (Number(c.valor)||0), 0);
+  const pagos = list.filter(c => paymentFor(c, monthStr)?.pago);
+  const totalRecebido = pagos.reduce((s,c)=> s + (Number(paymentFor(c,monthStr).valorPago)||0), 0);
+  const pendentes = list.length - pagos.length;
+
+  document.getElementById('recorrStatCards').innerHTML = [
+    {label:'Esperado no mês', value:fmtMoney(totalEsperado), hint:`${list.length} contrato(s) recorrente(s)`, gold:false},
+    {label:'Recebido no mês', value:fmtMoney(totalRecebido), hint:`${pagos.length} pagamento(s) confirmado(s)`, gold:true},
+    {label:'Pendente no mês', value:fmtMoney(totalEsperado-totalRecebido), hint:`${pendentes} contrato(s) aguardando baixa`, gold:false},
+  ].map(c=>`
+    <div class="stat-card ${c.gold?'gold':''}">
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-value">${c.value}</div>
+      <div class="stat-hint">${c.hint}</div>
+    </div>`).join('');
+
+  const tbl = document.getElementById('recorrTable');
+  tbl.querySelector('thead').innerHTML = `<tr><th>Cliente</th><th>Produto</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Data pagamento</th><th></th></tr>`;
+  const tbody = tbl.querySelector('tbody');
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="em-ic">↻</div><div class="em-title">Nenhum contrato recorrente neste mês</div>Contratos do tipo "Mensal" aparecem aqui automaticamente.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(s=>{
+    const pay = paymentFor(s, monthStr);
+    const pago = !!(pay && pay.pago);
+    return `
+    <tr>
+      <td><strong>${escapeHtml(clientName(s.clienteId))}</strong></td>
+      <td>${escapeHtml(productName(s.produtoId))}</td>
+      <td>${dueDateLabel(s, monthStr)}</td>
+      <td class="money">${fmtMoney(s.valor)}</td>
+      <td><span class="badge badge-${pago?'ativo':'lead'}">${pago?'Pago':'Pendente'}</span></td>
+      <td>${pago && pay.dataPagamento ? fmtDate(pay.dataPagamento) : '—'}</td>
+      <td><div class="row-actions">
+        ${pago
+          ? `<button class="btn btn-outline" style="padding:6px 12px; font-size:12px;" data-undo="${s.id}">Desfazer baixa</button>`
+          : `<button class="btn btn-gold" style="padding:6px 12px; font-size:12px;" data-pay="${s.id}">Dar baixa</button>`}
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('[data-pay]').forEach(b=> b.addEventListener('click', ()=> openPaymentModal(b.dataset.pay, monthStr)));
+  tbody.querySelectorAll('[data-undo]').forEach(b=> b.addEventListener('click', ()=> undoPayment(b.dataset.undo, monthStr)));
+}
+document.getElementById('recorrMonth').addEventListener('change', renderRecorrencias);
+
+function openPaymentModal(saleId, monthStr){
+  const sale = state.sales.find(s=>s.id===saleId);
+  if(!sale) return;
+  document.getElementById('paySaleId').value = saleId;
+  document.getElementById('payCompetencia').value = monthStr;
+  document.getElementById('payContractLabel').textContent = `${clientName(sale.clienteId)} — ${productName(sale.produtoId)} (${monthStr})`;
+  document.getElementById('payValor').value = sale.valor;
+  document.getElementById('payData').value = todayISO();
+  openModal('paymentModal');
+}
+document.getElementById('savePayment').addEventListener('click', async ()=>{
+  const saleId = document.getElementById('paySaleId').value;
+  const monthStr = document.getElementById('payCompetencia').value;
+  const sale = state.sales.find(s=>s.id===saleId);
+  if(!sale) return;
+  const valorPago = parseFloat(document.getElementById('payValor').value) || 0;
+  const dataPagamento = document.getElementById('payData').value || todayISO();
+  if(!sale.pagamentos) sale.pagamentos = {};
+  sale.pagamentos[monthStr] = { pago:true, valorPago, dataPagamento };
+  await persist();
+  closeModal('paymentModal');
+  toast('Pagamento registrado.');
+  renderRecorrencias(); renderDashboard();
+});
+async function undoPayment(saleId, monthStr){
+  const sale = state.sales.find(s=>s.id===saleId);
+  if(!sale || !sale.pagamentos) return;
+  if(!confirm('Desfazer a baixa deste pagamento?')) return;
+  delete sale.pagamentos[monthStr];
+  await persist();
+  toast('Baixa desfeita.');
+  renderRecorrencias(); renderDashboard();
+}
+
+document.getElementById('csvRecorrencias').addEventListener('click', ()=>{
+  const monthStr = document.getElementById('recorrMonth').value || todayISO().slice(0,7);
+  const list = recurringForMonth(monthStr);
+  const rows = list.map(s=>{
+    const pay = paymentFor(s, monthStr);
+    const pago = !!(pay && pay.pago);
+    return [clientName(s.clienteId), productName(s.produtoId), dueDateLabel(s,monthStr), s.valor.toFixed(2), pago?'Pago':'Pendente', pago && pay.dataPagamento ? fmtDate(pay.dataPagamento) : ''];
+  });
+  const csv = toCsv(['Cliente','Produto','Vencimento','Valor','Status','Data pagamento'], rows);
+  downloadBlob(csv, `recorrencias-${monthStr}.csv`, 'text/csv;charset=utf-8');
+  toast('CSV de recorrências exportado.');
+});
+
+/* ========================================================
    DASHBOARD
    ======================================================== */
+function cashReceivedForMonth(monthStr){
+  let total = 0;
+  state.sales.forEach(s=>{
+    if(s.tipo === 'eventual'){
+      if(monthKey(s.dataContratacao) === monthStr) total += Number(s.valor)||0;
+    } else {
+      const pay = paymentFor(s, monthStr);
+      if(pay && pay.pago) total += Number(pay.valorPago)||0;
+    }
+  });
+  return total;
+}
+function cashReceivedTotal(){
+  let total = 0;
+  state.sales.forEach(s=>{
+    if(s.tipo === 'eventual'){
+      total += Number(s.valor)||0;
+    } else if(s.pagamentos){
+      Object.values(s.pagamentos).forEach(p=>{ if(p.pago) total += Number(p.valorPago)||0; });
+    }
+  });
+  return total;
+}
+
 function renderDashboard(){
   const now = new Date();
   const curMonth = now.toISOString().slice(0,7);
   const totalClients = state.clients.length;
   const newClientsMonth = state.clients.filter(c => monthKey(c.dataPrimeiroContato)===curMonth).length;
-  const revenueMonth = state.sales.filter(s => monthKey(s.dataContratacao)===curMonth).reduce((sum,s)=> sum + (Number(s.valor)||0), 0);
-  const revenueTotal = state.sales.reduce((sum,s)=> sum + (Number(s.valor)||0), 0);
+  const revenueMonth = cashReceivedForMonth(curMonth);
+  const revenueTotal = cashReceivedTotal();
+  const recurringThisMonth = recurringForMonth(curMonth);
+  const recurringPendentes = recurringThisMonth.filter(s => !(paymentFor(s, curMonth)?.pago)).length;
   const activeProductsCount = {};
   state.sales.forEach(s=>{
     const p = state.products.find(pr=>pr.id===s.produtoId);
@@ -958,9 +1180,9 @@ function renderDashboard(){
 
   const cards = [
     {label:'Total de clientes', value:totalClients, hint:`${newClientsMonth} novo(s) este mês`, gold:false},
-    {label:'Receita do mês', value:fmtMoney(revenueMonth), hint:now.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}), gold:true},
-    {label:'Receita acumulada', value:fmtMoney(revenueTotal), hint:`${state.sales.length} contrato(s) no total`, gold:false},
-    {label:'Categoria mais vendida', value: topCat ? (PRODUCT_TYPES[topCat[0]]||topCat[0]) : '—', hint: topCat ? `${topCat[1]} contrato(s)` : 'Sem vendas registradas', gold:false},
+    {label:'Recebido no mês', value:fmtMoney(revenueMonth), hint:now.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})+' · contratos eventuais + baixas de mensais', gold:true},
+    {label:'Recebido acumulado', value:fmtMoney(revenueTotal), hint:`${state.sales.length} contrato(s) no total`, gold:false},
+    {label:'Recorrências pendentes', value:recurringPendentes, hint: recurringPendentes ? 'Aguardando baixa este mês' : 'Tudo em dia este mês', gold:false},
   ];
   document.getElementById('statCards').innerHTML = cards.map(c=>`
     <div class="stat-card ${c.gold?'gold':''}">
@@ -1020,25 +1242,34 @@ document.getElementById('pdfClients').addEventListener('click', ()=>{
 document.getElementById('pdfRevenue').addEventListener('click', ()=>{
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  pdfHeader(doc, 'Relatório de Receitas');
-  const total = state.sales.reduce((s,x)=>s+(Number(x.valor)||0),0);
-  pdfSummaryLine(doc, 34, `Receita acumulada: ${fmtMoney(total)}  |  Contratos: ${state.sales.length}`);
+  pdfHeader(doc, 'Relatório de Receitas (recebido)');
+  const total = cashReceivedTotal();
+  pdfSummaryLine(doc, 34, `Total recebido: ${fmtMoney(total)}  |  Contratos eventuais + baixas de mensais confirmadas`);
 
   const byProduct = {};
   state.sales.forEach(s=>{
     const name = productName(s.produtoId);
-    byProduct[name] = (byProduct[name]||0) + (Number(s.valor)||0);
+    let received = 0;
+    if(s.tipo==='eventual') received = Number(s.valor)||0;
+    else if(s.pagamentos) Object.values(s.pagamentos).forEach(p=>{ if(p.pago) received += Number(p.valorPago)||0; });
+    byProduct[name] = (byProduct[name]||0) + received;
   });
   const rowsProduct = Object.entries(byProduct).sort((a,b)=>b[1]-a[1]).map(([n,v])=>[n, fmtMoney(v)]);
-  doc.autoTable({ startY:40, head:[['Produto','Receita total']], body: rowsProduct, headStyles:{fillColor:[1,81,106]}, styles:{fontSize:9.5} });
+  doc.autoTable({ startY:40, head:[['Produto','Receita recebida']], body: rowsProduct, headStyles:{fillColor:[1,81,106]}, styles:{fontSize:9.5} });
 
   const byMonth = {};
   state.sales.forEach(s=>{
-    const mk = monthKey(s.dataContratacao) || 'Sem data';
-    byMonth[mk] = (byMonth[mk]||0) + (Number(s.valor)||0);
+    if(s.tipo === 'eventual'){
+      const mk = monthKey(s.dataContratacao) || 'Sem data';
+      byMonth[mk] = (byMonth[mk]||0) + (Number(s.valor)||0);
+    } else if(s.pagamentos){
+      Object.entries(s.pagamentos).forEach(([mk,p])=>{
+        if(p.pago) byMonth[mk] = (byMonth[mk]||0) + (Number(p.valorPago)||0);
+      });
+    }
   });
   const rowsMonth = Object.entries(byMonth).sort((a,b)=> a[0].localeCompare(b[0])).map(([m,v])=>[m, fmtMoney(v)]);
-  doc.autoTable({ startY: doc.lastAutoTable.finalY + 10, head:[['Período (mês)','Receita']], body: rowsMonth, headStyles:{fillColor:[201,151,62], textColor:[40,30,10]}, styles:{fontSize:9.5} });
+  doc.autoTable({ startY: doc.lastAutoTable.finalY + 10, head:[['Período (mês)','Receita recebida']], body: rowsMonth, headStyles:{fillColor:[201,151,62], textColor:[40,30,10]}, styles:{fontSize:9.5} });
 
   doc.save('relatorio-receitas.pdf');
   toast('PDF de receitas gerado.');
@@ -1147,6 +1378,7 @@ function escapeHtml(str){
 }
 function renderAll(){
   refreshSelectOptions();
+  if(!document.getElementById('recorrMonth').value) document.getElementById('recorrMonth').value = todayISO().slice(0,7);
   renderDashboard();
   renderClients();
   renderProducts();

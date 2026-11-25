@@ -186,6 +186,13 @@
   .badge-inativo{background:#EDEDED; color:#7A7A7A;}
   .badge-mensal{background:var(--teal-050); color:var(--teal-900);}
   .badge-eventual{background:var(--gold-soft); color:#8A6420;}
+  .badge-entrada{background:var(--ok-soft); color:var(--ok);}
+  .badge-saida{background:var(--danger-soft); color:var(--danger);}
+  .rec-details{border:1.5px solid var(--line); border-radius:8px; padding:10px 14px; margin-top:4px;}
+  .rec-details summary{cursor:pointer; font-size:12.5px; font-weight:600; color:var(--teal-900);}
+  .rec-actions{display:flex; gap:6px; align-items:center;}
+  .btn-sm{padding:6px 12px; font-size:12px;}
+  tbody td.wrap{white-space:normal; min-width:110px; max-width:200px;}
 
   .empty-state{padding:50px 20px; text-align:center; color:var(--muted);}
   .empty-state .em-title{font-weight:700; color:var(--ink); margin-bottom:4px; font-family:'Montserrat',sans-serif;}
@@ -282,6 +289,9 @@
       <button class="nav-item" data-page="produtos"><span class="ic">◧</span> Produtos</button>
       <button class="nav-item" data-page="vendas"><span class="ic">↗</span> Vendas / Contratos</button>
       <button class="nav-item" data-page="recorrencias"><span class="ic">↻</span> Recorrências</button>
+      <button class="nav-item" data-page="custos"><span class="ic">−</span> Custos</button>
+      <button class="nav-item" data-page="financeiro"><span class="ic">$</span> Financeiro</button>
+      <button class="nav-item" data-page="recibos"><span class="ic">✎</span> Recibos</button>
       <button class="nav-item" data-page="relatorios"><span class="ic">▥</span> Relatórios</button>
     </nav>
     <div class="save-indicator" id="saveIndicator"></div>
@@ -396,6 +406,99 @@
       </div>
     </section>
 
+    <!-- ---------- CUSTOS ---------- -->
+    <section class="page" id="page-custos" style="display:none;">
+      <div class="topbar">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="hamburger" id="hamburger7">☰</button>
+          <div>
+            <div class="page-title">Custos</div>
+            <div class="page-sub">Custos fixos e variáveis do negócio, mês a mês</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <input type="month" id="custosMonth">
+          <button class="btn btn-outline" id="csvCustos">Exportar CSV</button>
+        </div>
+      </div>
+      <div class="grid-cards" id="custosStatCards"></div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Custos fixos</h3>
+          <button class="btn btn-gold" id="btnNewCustoFixo">+ Novo custo fixo</button>
+        </div>
+        <div class="table-wrap"><table id="custosFixosTable"><thead></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Custos variáveis</h3>
+          <button class="btn btn-gold" id="btnNewCustoVariavel">+ Novo custo variável</button>
+        </div>
+        <div class="table-wrap"><table id="custosVariaveisTable"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ---------- FINANCEIRO ---------- -->
+    <section class="page" id="page-financeiro" style="display:none;">
+      <div class="topbar">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="hamburger" id="hamburger8">☰</button>
+          <div>
+            <div class="page-title">Financeiro</div>
+            <div class="page-sub">Fluxo de caixa: entradas e saídas do negócio</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-outline" id="btnIncludeCustosFin">Incluir custos do mês</button>
+          <button class="btn btn-outline" id="csvFinanceiro">Exportar CSV</button>
+          <button class="btn btn-gold" id="btnNewMovimento">+ Novo movimento</button>
+        </div>
+      </div>
+      <div class="grid-cards" id="finStatCards"></div>
+      <div class="filters">
+        <input type="month" id="finMonth">
+        <select id="finFilterTipo">
+          <option value="">Entradas e saídas</option>
+          <option value="entrada">Somente entradas</option>
+          <option value="saida">Somente saídas</option>
+        </select>
+        <select id="finFilterCategoria"><option value="">Todas as categorias</option></select>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Histórico de movimentos</h3></div>
+        <div class="table-wrap"><table id="finTable"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ---------- RECIBOS ---------- -->
+    <section class="page" id="page-recibos" style="display:none;">
+      <div class="topbar">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="hamburger" id="hamburger9">☰</button>
+          <div>
+            <div class="page-title">Recibos</div>
+            <div class="page-sub">Emita, arquive e imprima em PDF os recibos de prestação de serviço</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-outline" id="csvRecibos">Exportar CSV</button>
+          <button class="btn btn-outline" id="pdfRecibosLista">PDF dos listados</button>
+          <button class="btn btn-gold" id="btnNewRecibo">+ Novo recibo</button>
+        </div>
+      </div>
+      <div class="grid-cards" id="recStatCards"></div>
+      <div class="filters">
+        <input type="search" id="recSearch" placeholder="Buscar por pagador ou serviço">
+        <input type="month" id="recFilterMonth" title="Mês de referência do recibo">
+        <button class="btn btn-ghost" id="recClearFilters" type="button">Limpar filtros</button>
+      </div>
+      <div class="panel">
+        <div class="table-wrap"><table id="recTable"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </section>
+
     <!-- ---------- RELATÓRIOS ---------- -->
     <section class="page" id="page-relatorios" style="display:none;">
       <div class="topbar">
@@ -491,14 +594,8 @@
       <div class="field"><label>Nome do produto</label><input type="text" id="productNome" required></div>
       <div class="grid-2">
         <div class="field"><label>Tipo</label>
-          <select id="productTipo">
-            <option value="mentoria_individual">Mentoria individual</option>
-            <option value="mentoria_grupo">Mentoria em grupo</option>
-            <option value="consultoria_pontual">Consultoria pontual</option>
-            <option value="consultoria_mensal">Consultoria mensal</option>
-            <option value="curso">Curso</option>
-            <option value="terceirizacao">Terceirização</option>
-          </select>
+          <input type="text" id="productTipo" list="productTipoDatalist" placeholder="Selecione ou digite um novo tipo" autocomplete="off">
+          <datalist id="productTipoDatalist"></datalist>
         </div>
         <div class="field"><label>Valor padrão (R$)</label><input type="number" id="productValor" step="0.01" min="0"></div>
       </div>
@@ -583,6 +680,112 @@
   </div>
 </div>
 
+<div class="overlay" id="custoModal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="custoModalTitle">Novo custo</h3><button class="modal-close" data-close="custoModal">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="custoId">
+      <input type="hidden" id="custoTipo">
+      <div class="field"><label>Descrição</label><input type="text" id="custoDescricao" placeholder="Ex: Aluguel, internet, materiais..." required></div>
+      <div class="grid-2">
+        <div class="field" id="custoValorLabelWrap"><label>Valor mensal (R$)</label><input type="number" id="custoValor" step="0.01" min="0"></div>
+        <div class="field" id="custoProdutoWrap" style="display:none;">
+          <label>Produto vinculado (opcional)</label>
+          <select id="custoProduto"><option value="">Nenhum</option></select>
+        </div>
+      </div>
+      <div class="grid-2" id="custoFixoDatasWrap">
+        <div class="field"><label>Data de início</label><input type="date" id="custoDataInicio"></div>
+        <div class="field"><label>Data de término (opcional)</label><input type="date" id="custoDataFim"></div>
+      </div>
+      <div class="field" id="custoVariavelDataWrap" style="display:none;">
+        <label>Data</label><input type="date" id="custoData">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="custoModal">Cancelar</button>
+      <button class="btn btn-gold" id="saveCusto">Salvar custo</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="movimentoModal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="movimentoModalTitle">Novo movimento</h3><button class="modal-close" data-close="movimentoModal">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="movId">
+      <div class="field"><label>Tipo</label>
+        <select id="movTipo">
+          <option value="entrada">Entrada (receita, investimento, empréstimo)</option>
+          <option value="saida">Saída (despesa, custo, retirada)</option>
+        </select>
+      </div>
+      <div class="field"><label>Descrição</label><input type="text" id="movDescricao" required></div>
+      <div class="grid-2">
+        <div class="field"><label>Valor (R$)</label><input type="number" id="movValor" step="0.01" min="0"></div>
+        <div class="field"><label>Data</label><input type="date" id="movData"></div>
+      </div>
+      <div class="field">
+        <label>Categoria</label>
+        <input type="text" id="movCategoria" list="movCategoriaDatalist" placeholder="Ex: Receita de mentoria, retirada de sócio, empréstimo...">
+        <datalist id="movCategoriaDatalist"></datalist>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="movimentoModal">Cancelar</button>
+      <button class="btn btn-gold" id="saveMovimento">Salvar movimento</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="reciboModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head"><h3 id="reciboModalTitle">Novo recibo</h3><button class="modal-close" data-close="reciboModal">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="recId">
+      <div class="grid-2">
+        <div class="field"><label>Preencher a partir de um cliente (opcional)</label>
+          <select id="recCliente"></select>
+        </div>
+        <div class="field"><label>Preencher a partir de um contrato (opcional)</label>
+          <select id="recContrato"></select>
+        </div>
+      </div>
+      <div class="field"><label>Recebi de (nome do pagador)</label><input type="text" id="recNome"></div>
+      <div class="grid-2">
+        <div class="field"><label>Tipo de documento</label>
+          <select id="recTipoDoc"><option value="CPF">CPF</option><option value="CNPJ">CNPJ</option></select>
+        </div>
+        <div class="field"><label>Nº do documento</label><input type="text" id="recDocumento" placeholder="Em branco = linha para preencher à mão"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Valor (R$)</label><input type="number" id="recValor" step="0.01" min="0"></div>
+        <div class="field"><label>Valor por extenso</label><input type="text" id="recExtenso"></div>
+      </div>
+      <div class="field"><label>Referente à prestação de serviços de</label><input type="text" id="recServico" placeholder="Ex: consultoria de departamento pessoal"></div>
+      <div class="grid-2">
+        <div class="field"><label>Mês de referência</label><input type="month" id="recRefMes"></div>
+        <div class="field"><label>Data de emissão</label><input type="date" id="recData"></div>
+      </div>
+      <details class="rec-details">
+        <summary>Cidade, forma de pagamento e dados do emitente</summary>
+        <div class="field" style="margin-top:14px;"><label>Cidade</label><input type="text" id="recCidade"></div>
+        <div class="grid-2">
+          <div class="field"><label>Forma de pagamento</label><input type="text" id="recForma"></div>
+          <div class="field"><label>CNPJ do emitente</label><input type="text" id="recCnpj"></div>
+        </div>
+        <div class="field"><label>Nome do emitente (assinatura)</label><input type="text" id="recEmitente"></div>
+        <div class="page-sub">Estes dados ficam salvos e já vêm preenchidos nos próximos recibos.</div>
+      </details>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="reciboModal">Cancelar</button>
+      <button class="btn btn-outline" id="saveRecibo">Salvar recibo</button>
+      <button class="btn btn-gold" id="saveReciboPdf">Salvar e gerar PDF</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -632,14 +835,23 @@ function updateSaveIndicator(status){
 }
 
 function persist(){
-  const ok = Store.save({ clients: state.clients, products: state.products, sales: state.sales });
+  const ok = Store.save({
+    clients: state.clients,
+    products: state.products,
+    sales: state.sales,
+    customProductTypes: state.customProductTypes,
+    custos: state.custos,
+    financeiro: state.financeiro,
+    recibos: state.recibos,
+    reciboConfig: state.reciboConfig
+  });
   updateSaveIndicator(ok ? 'ok' : 'error');
 }
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const fmtMoney = v => (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const fmtDate = d => { if(!d) return '—'; const [y,m,day]=d.split('-'); return day&&m&&y ? `${day}/${m}/${y}` : d; };
-const todayISO = () => new Date().toISOString().slice(0,10);
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const monthKey = d => d ? d.slice(0,7) : '';
 
 const PRODUCT_TYPES = {
@@ -652,7 +864,33 @@ const PRODUCT_TYPES = {
 };
 const STATUS_LABELS = {lead:'Lead', prospect:'Prospect', ativo:'Cliente ativo', inativo:'Cliente inativo'};
 
-let state = { clients:[], products:[], sales:[], currentPage:'dashboard' };
+let state = { clients:[], products:[], sales:[], customProductTypes:[], custos:[], financeiro:[], recibos:[], reciboConfig:null, currentPage:'dashboard' };
+
+// Normaliza um texto de tipo digitado: se corresponder (sem acento/maiúsculas) a um
+// tipo já existente (padrão ou customizado), reaproveita a mesma entrada — evitando duplicatas.
+function normalizeKey(str){
+  return String(str||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+}
+function resolveProductType(typedLabel){
+  const typed = String(typedLabel||'').trim();
+  if(!typed) return '';
+  const typedNorm = normalizeKey(typed);
+  const builtInMatch = Object.entries(PRODUCT_TYPES).find(([slug,label]) => normalizeKey(label)===typedNorm);
+  if(builtInMatch) return builtInMatch[0];
+  const customMatch = state.customProductTypes.find(t => normalizeKey(t)===typedNorm);
+  if(customMatch) return customMatch;
+  // Novo tipo: registra para sugestões futuras.
+  state.customProductTypes.push(typed);
+  return typed;
+}
+function allProductTypeLabels(){
+  return [...Object.values(PRODUCT_TYPES), ...state.customProductTypes];
+}
+function populateProductTypeDatalist(){
+  const dl = document.getElementById('productTipoDatalist');
+  if(!dl) return;
+  dl.innerHTML = allProductTypeLabels().map(l => `<option value="${escapeHtml(l)}"></option>`).join('');
+}
 
 function toast(msg, danger){
   const t = document.getElementById('toast');
@@ -665,7 +903,7 @@ function toast(msg, danger){
 /* ========================================================
    NAVIGATION
    ======================================================== */
-const pages = ['dashboard','clientes','produtos','vendas','recorrencias','relatorios'];
+const pages = ['dashboard','clientes','produtos','vendas','recorrencias','custos','financeiro','recibos','relatorios'];
 function goToPage(page){
   state.currentPage = page;
   pages.forEach(p => document.getElementById('page-'+p).style.display = (p===page ? 'block':'none'));
@@ -677,12 +915,15 @@ function goToPage(page){
   if(page==='produtos') renderProducts();
   if(page==='vendas') renderSales();
   if(page==='recorrencias') renderRecorrencias();
+  if(page==='custos') renderCustos();
+  if(page==='financeiro') renderFinanceiro();
+  if(page==='recibos') renderRecibos();
 }
 document.getElementById('navList').addEventListener('click', (e)=>{
   const btn = e.target.closest('.nav-item');
   if(btn) goToPage(btn.dataset.page);
 });
-['hamburger','hamburger2','hamburger3','hamburger4','hamburger5','hamburger6'].forEach(id=>{
+['hamburger','hamburger2','hamburger3','hamburger4','hamburger5','hamburger6','hamburger7','hamburger8','hamburger9'].forEach(id=>{
   const el = document.getElementById(id);
   if(el) el.addEventListener('click', ()=>{
     document.getElementById('sidebar').classList.add('open');
@@ -792,10 +1033,11 @@ document.getElementById('filterClientStatus').addEventListener('change', renderC
    PRODUCTS
    ======================================================== */
 function openProductModal(p){
+  populateProductTypeDatalist();
   document.getElementById('productModalTitle').textContent = p ? 'Editar produto' : 'Novo produto';
   document.getElementById('productId').value = p ? p.id : '';
   document.getElementById('productNome').value = p ? p.nome : '';
-  document.getElementById('productTipo').value = p ? p.tipo : 'mentoria_individual';
+  document.getElementById('productTipo').value = p ? (PRODUCT_TYPES[p.tipo] || p.tipo) : 'Mentoria individual';
   document.getElementById('productValor').value = p ? p.valorPadrao : '';
   document.getElementById('productDescricao').value = p ? p.descricao : '';
   openModal('productModal');
@@ -805,11 +1047,13 @@ document.getElementById('btnNewProduct').addEventListener('click', ()=> openProd
 document.getElementById('saveProduct').addEventListener('click', async ()=>{
   const nome = document.getElementById('productNome').value.trim();
   if(!nome){ toast('Informe o nome do produto.', true); return; }
+  const tipoDigitado = document.getElementById('productTipo').value.trim();
+  if(!tipoDigitado){ toast('Informe o tipo do produto.', true); return; }
   const id = document.getElementById('productId').value;
   const data = {
     id: id || uid(),
     nome,
-    tipo: document.getElementById('productTipo').value,
+    tipo: resolveProductType(tipoDigitado),
     valorPadrao: parseFloat(document.getElementById('productValor').value) || 0,
     descricao: document.getElementById('productDescricao').value.trim()
   };
@@ -1136,6 +1380,311 @@ document.getElementById('csvRecorrencias').addEventListener('click', ()=>{
 });
 
 /* ========================================================
+   CUSTOS — fixos e variáveis
+   ======================================================== */
+function monthBounds(monthStr){
+  const [y,m] = monthStr.split('-').map(Number);
+  const monthStart = `${monthStr}-01`;
+  const lastDay = new Date(y, m, 0).getDate();
+  const monthEnd = `${monthStr}-${String(lastDay).padStart(2,'0')}`;
+  return { monthStart, monthEnd };
+}
+function isFixedCostActiveInMonth(c, monthStr){
+  const { monthStart, monthEnd } = monthBounds(monthStr);
+  if(c.dataInicio && c.dataInicio > monthEnd) return false;
+  if(c.dataFim && c.dataFim < monthStart) return false;
+  return true;
+}
+function fixedCostsForMonth(monthStr){
+  return state.custos.filter(c => c.tipo==='fixo' && isFixedCostActiveInMonth(c, monthStr))
+    .sort((a,b)=> (a.dataInicio||'').localeCompare(b.dataInicio||''));
+}
+function variableCostsForMonth(monthStr){
+  return state.custos.filter(c => c.tipo==='variavel' && monthKey(c.data)===monthStr)
+    .sort((a,b)=> (b.data||'').localeCompare(a.data||''));
+}
+
+function openCustoModal(tipo, custo){
+  document.getElementById('custoModalTitle').textContent = (custo ? 'Editar' : 'Novo') + ' custo ' + (tipo==='fixo' ? 'fixo' : 'variável');
+  document.getElementById('custoId').value = custo ? custo.id : '';
+  document.getElementById('custoTipo').value = tipo;
+  document.getElementById('custoDescricao').value = custo ? custo.descricao : '';
+  document.getElementById('custoValor').value = custo ? custo.valor : '';
+  document.getElementById('custoValorLabelWrap').querySelector('label').textContent = tipo==='fixo' ? 'Valor mensal (R$)' : 'Valor (R$)';
+  document.getElementById('custoFixoDatasWrap').style.display = tipo==='fixo' ? 'grid' : 'none';
+  document.getElementById('custoVariavelDataWrap').style.display = tipo==='variavel' ? 'block' : 'none';
+  document.getElementById('custoProdutoWrap').style.display = tipo==='variavel' ? 'block' : 'none';
+  if(tipo==='fixo'){
+    document.getElementById('custoDataInicio').value = custo ? custo.dataInicio : todayISO();
+    document.getElementById('custoDataFim').value = custo ? (custo.dataFim||'') : '';
+  } else {
+    document.getElementById('custoData').value = custo ? custo.data : todayISO();
+    const sel = document.getElementById('custoProduto');
+    sel.innerHTML = '<option value="">Nenhum</option>' + state.products.map(p=> `<option value="${p.id}">${escapeHtml(p.nome)}</option>`).join('');
+    sel.value = custo && custo.produtoId ? custo.produtoId : '';
+  }
+  openModal('custoModal');
+}
+document.getElementById('btnNewCustoFixo').addEventListener('click', ()=> openCustoModal('fixo', null));
+document.getElementById('btnNewCustoVariavel').addEventListener('click', ()=> openCustoModal('variavel', null));
+
+document.getElementById('saveCusto').addEventListener('click', async ()=>{
+  const descricao = document.getElementById('custoDescricao').value.trim();
+  if(!descricao){ toast('Informe a descrição do custo.', true); return; }
+  const id = document.getElementById('custoId').value;
+  const tipo = document.getElementById('custoTipo').value;
+  const valor = parseFloat(document.getElementById('custoValor').value) || 0;
+  let data;
+  if(tipo === 'fixo'){
+    data = {
+      id: id || uid(), tipo, descricao, valor,
+      dataInicio: document.getElementById('custoDataInicio').value || todayISO(),
+      dataFim: document.getElementById('custoDataFim').value || ''
+    };
+  } else {
+    data = {
+      id: id || uid(), tipo, descricao, valor,
+      data: document.getElementById('custoData').value || todayISO(),
+      produtoId: document.getElementById('custoProduto').value || ''
+    };
+  }
+  if(id){
+    const idx = state.custos.findIndex(c=>c.id===id);
+    state.custos[idx] = data;
+  } else {
+    state.custos.push(data);
+  }
+  await persist();
+  closeModal('custoModal');
+  toast(id ? 'Custo atualizado.' : 'Custo cadastrado.');
+  renderCustos();
+});
+async function deleteCusto(id){
+  if(!confirm('Excluir este custo?')) return;
+  state.custos = state.custos.filter(c=>c.id!==id);
+  await persist();
+  toast('Custo excluído.');
+  renderCustos();
+}
+
+function renderCustos(){
+  const monthInput = document.getElementById('custosMonth');
+  if(!monthInput.value) monthInput.value = todayISO().slice(0,7);
+  const monthStr = monthInput.value;
+  const fixos = fixedCostsForMonth(monthStr);
+  const variaveis = variableCostsForMonth(monthStr);
+  const totalFixos = fixos.reduce((s,c)=> s+(Number(c.valor)||0), 0);
+  const totalVariaveis = variaveis.reduce((s,c)=> s+(Number(c.valor)||0), 0);
+
+  document.getElementById('custosStatCards').innerHTML = [
+    {label:'Custos fixos (mês)', value:fmtMoney(totalFixos), hint:`${fixos.length} custo(s) ativo(s)`, gold:false},
+    {label:'Custos variáveis (mês)', value:fmtMoney(totalVariaveis), hint:`${variaveis.length} lançamento(s)`, gold:false},
+    {label:'Custo total (mês)', value:fmtMoney(totalFixos+totalVariaveis), hint:monthStr, gold:true},
+  ].map(c=>`
+    <div class="stat-card ${c.gold?'gold':''}">
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-value">${c.value}</div>
+      <div class="stat-hint">${c.hint}</div>
+    </div>`).join('');
+
+  const tf = document.getElementById('custosFixosTable');
+  tf.querySelector('thead').innerHTML = `<tr><th>Descrição</th><th>Valor mensal</th><th>Início</th><th>Término</th><th></th></tr>`;
+  const tbf = tf.querySelector('tbody');
+  tbf.innerHTML = fixos.length ? fixos.map(c=>`
+    <tr>
+      <td><strong>${escapeHtml(c.descricao)}</strong></td>
+      <td class="money">${fmtMoney(c.valor)}</td>
+      <td>${fmtDate(c.dataInicio)}</td>
+      <td>${c.dataFim ? fmtDate(c.dataFim) : '—'}</td>
+      <td><div class="row-actions">
+        <button class="icon-btn" data-edit-fixo="${c.id}" title="Editar">✎</button>
+        <button class="icon-btn del" data-del-custo="${c.id}" title="Excluir">🗑</button>
+      </div></td>
+    </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="em-ic">−</div><div class="em-title">Nenhum custo fixo neste mês</div>Cadastre aluguel, salários, internet e outros custos recorrentes.</div></td></tr>`;
+  tbf.querySelectorAll('[data-edit-fixo]').forEach(b=> b.addEventListener('click', ()=> openCustoModal('fixo', state.custos.find(c=>c.id===b.dataset.editFixo))));
+  tbf.querySelectorAll('[data-del-custo]').forEach(b=> b.addEventListener('click', ()=> deleteCusto(b.dataset.delCusto)));
+
+  const tv = document.getElementById('custosVariaveisTable');
+  tv.querySelector('thead').innerHTML = `<tr><th>Descrição</th><th>Produto vinculado</th><th>Valor</th><th>Data</th><th></th></tr>`;
+  const tbv = tv.querySelector('tbody');
+  tbv.innerHTML = variaveis.length ? variaveis.map(c=>`
+    <tr>
+      <td><strong>${escapeHtml(c.descricao)}</strong></td>
+      <td>${c.produtoId ? escapeHtml(productName(c.produtoId)) : '—'}</td>
+      <td class="money">${fmtMoney(c.valor)}</td>
+      <td>${fmtDate(c.data)}</td>
+      <td><div class="row-actions">
+        <button class="icon-btn" data-edit-var="${c.id}" title="Editar">✎</button>
+        <button class="icon-btn del" data-del-custo="${c.id}" title="Excluir">🗑</button>
+      </div></td>
+    </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="em-ic">−</div><div class="em-title">Nenhum custo variável neste mês</div>Cadastre materiais, comissões e outros custos pontuais.</div></td></tr>`;
+  tbv.querySelectorAll('[data-edit-var]').forEach(b=> b.addEventListener('click', ()=> openCustoModal('variavel', state.custos.find(c=>c.id===b.dataset.editVar))));
+  tbv.querySelectorAll('[data-del-custo]').forEach(b=> b.addEventListener('click', ()=> deleteCusto(b.dataset.delCusto)));
+}
+document.getElementById('custosMonth').addEventListener('change', renderCustos);
+
+document.getElementById('csvCustos').addEventListener('click', ()=>{
+  const monthStr = document.getElementById('custosMonth').value || todayISO().slice(0,7);
+  const fixos = fixedCostsForMonth(monthStr).map(c=> ['Fixo', c.descricao, c.valor.toFixed(2), fmtDate(c.dataInicio), c.dataFim?fmtDate(c.dataFim):'', '']);
+  const variaveis = variableCostsForMonth(monthStr).map(c=> ['Variável', c.descricao, c.valor.toFixed(2), fmtDate(c.data), '', c.produtoId?productName(c.produtoId):'']);
+  const rows = [...fixos, ...variaveis];
+  const csv = toCsv(['Tipo','Descrição','Valor','Data/Início','Término','Produto vinculado'], rows);
+  downloadBlob(csv, `custos-${monthStr}.csv`, 'text/csv;charset=utf-8');
+  toast('CSV de custos exportado.');
+});
+
+/* ========================================================
+   FINANCEIRO — fluxo de caixa (entradas e saídas)
+   ======================================================== */
+function populateMovCategoriaDatalist(){
+  const dl = document.getElementById('movCategoriaDatalist');
+  const cats = [...new Set(state.financeiro.map(m=>m.categoria).filter(Boolean))].sort();
+  dl.innerHTML = cats.map(c=> `<option value="${escapeHtml(c)}"></option>`).join('');
+}
+
+function openMovimentoModal(mov){
+  populateMovCategoriaDatalist();
+  document.getElementById('movimentoModalTitle').textContent = mov ? 'Editar movimento' : 'Novo movimento';
+  document.getElementById('movId').value = mov ? mov.id : '';
+  document.getElementById('movTipo').value = mov ? mov.tipo : 'entrada';
+  document.getElementById('movDescricao').value = mov ? mov.descricao : '';
+  document.getElementById('movValor').value = mov ? mov.valor : '';
+  document.getElementById('movData').value = mov ? mov.data : todayISO();
+  document.getElementById('movCategoria').value = mov ? (mov.categoria||'') : '';
+  openModal('movimentoModal');
+}
+document.getElementById('btnNewMovimento').addEventListener('click', ()=> openMovimentoModal(null));
+
+document.getElementById('saveMovimento').addEventListener('click', async ()=>{
+  const descricao = document.getElementById('movDescricao').value.trim();
+  if(!descricao){ toast('Informe a descrição do movimento.', true); return; }
+  const id = document.getElementById('movId').value;
+  const existing = id ? state.financeiro.find(m=>m.id===id) : null;
+  const data = {
+    id: id || uid(),
+    tipo: document.getElementById('movTipo').value,
+    descricao,
+    valor: parseFloat(document.getElementById('movValor').value) || 0,
+    data: document.getElementById('movData').value || todayISO(),
+    categoria: document.getElementById('movCategoria').value.trim(),
+    // preserva o vínculo com um custo, se este movimento tiver sido criado
+    // automaticamente pelo botão "Incluir custos do mês"
+    custoId: existing ? existing.custoId : undefined,
+    competencia: existing ? existing.competencia : undefined
+  };
+  if(id){
+    const idx = state.financeiro.findIndex(m=>m.id===id);
+    state.financeiro[idx] = data;
+  } else {
+    state.financeiro.push(data);
+  }
+  await persist();
+  closeModal('movimentoModal');
+  toast(id ? 'Movimento atualizado.' : 'Movimento registrado.');
+  renderFinanceiro();
+});
+async function deleteMovimento(id){
+  if(!confirm('Excluir este movimento?')) return;
+  state.financeiro = state.financeiro.filter(m=>m.id!==id);
+  await persist();
+  toast('Movimento excluído.');
+  renderFinanceiro();
+}
+
+function renderFinanceiro(){
+  const monthInput = document.getElementById('finMonth');
+  const cardMonth = monthInput.value || todayISO().slice(0,7);
+
+  const totalEntradasMes = state.financeiro.filter(m=> m.tipo==='entrada' && monthKey(m.data)===cardMonth).reduce((s,m)=> s+(Number(m.valor)||0), 0);
+  const totalSaidasMes = state.financeiro.filter(m=> m.tipo==='saida' && monthKey(m.data)===cardMonth).reduce((s,m)=> s+(Number(m.valor)||0), 0);
+  const saldoMes = totalEntradasMes - totalSaidasMes;
+
+  const { monthEnd } = monthBounds(cardMonth);
+  const acumEntradas = state.financeiro.filter(m=> m.tipo==='entrada' && m.data && m.data<=monthEnd).reduce((s,m)=> s+(Number(m.valor)||0), 0);
+  const acumSaidas = state.financeiro.filter(m=> m.tipo==='saida' && m.data && m.data<=monthEnd).reduce((s,m)=> s+(Number(m.valor)||0), 0);
+  const saldoAcumulado = acumEntradas - acumSaidas;
+
+  document.getElementById('finStatCards').innerHTML = [
+    {label:'Entradas do mês', value:fmtMoney(totalEntradasMes), hint:cardMonth, gold:false},
+    {label:'Saídas do mês', value:fmtMoney(totalSaidasMes), hint:cardMonth, gold:false},
+    {label:'Saldo líquido do mês', value:fmtMoney(saldoMes), hint: saldoMes>=0 ? 'Superávit no mês' : 'Déficit no mês', gold:true},
+    {label:'Saldo acumulado', value:fmtMoney(saldoAcumulado), hint:'Até '+cardMonth, gold:false},
+  ].map(c=>`
+    <div class="stat-card ${c.gold?'gold':''}">
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-value">${c.value}</div>
+      <div class="stat-hint">${c.hint}</div>
+    </div>`).join('');
+
+  const catSel = document.getElementById('finFilterCategoria');
+  const curCat = catSel.value;
+  const cats = [...new Set(state.financeiro.map(m=>m.categoria).filter(Boolean))].sort();
+  catSel.innerHTML = '<option value="">Todas as categorias</option>' + cats.map(c=> `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  catSel.value = curCat;
+
+  const monthF = monthInput.value;
+  const tipoF = document.getElementById('finFilterTipo').value;
+  const catF = document.getElementById('finFilterCategoria').value;
+  let list = state.financeiro.slice().sort((a,b)=> (b.data||'').localeCompare(a.data||''));
+  if(monthF) list = list.filter(m=> monthKey(m.data)===monthF);
+  if(tipoF) list = list.filter(m=> m.tipo===tipoF);
+  if(catF) list = list.filter(m=> m.categoria===catF);
+
+  const tbl = document.getElementById('finTable');
+  tbl.querySelector('thead').innerHTML = `<tr><th>Tipo</th><th>Descrição</th><th>Categoria</th><th>Data</th><th>Valor</th><th></th></tr>`;
+  const tbody = tbl.querySelector('tbody');
+  tbody.innerHTML = list.length ? list.map(m=>`
+    <tr>
+      <td><span class="badge badge-${m.tipo}">${m.tipo==='entrada'?'Entrada':'Saída'}</span></td>
+      <td><strong>${escapeHtml(m.descricao)}</strong></td>
+      <td>${m.categoria ? escapeHtml(m.categoria) : '—'}</td>
+      <td>${fmtDate(m.data)}</td>
+      <td class="money">${fmtMoney(m.valor)}</td>
+      <td><div class="row-actions">
+        <button class="icon-btn" data-edit-mov="${m.id}" title="Editar">✎</button>
+        <button class="icon-btn del" data-del-mov="${m.id}" title="Excluir">🗑</button>
+      </div></td>
+    </tr>`).join('') : `<tr><td colspan="6"><div class="empty-state"><div class="em-ic">$</div><div class="em-title">Nenhum movimento encontrado</div>Registre uma entrada ou saída, ou ajuste os filtros.</div></td></tr>`;
+  tbody.querySelectorAll('[data-edit-mov]').forEach(b=> b.addEventListener('click', ()=> openMovimentoModal(state.financeiro.find(m=>m.id===b.dataset.editMov))));
+  tbody.querySelectorAll('[data-del-mov]').forEach(b=> b.addEventListener('click', ()=> deleteMovimento(b.dataset.delMov)));
+}
+document.getElementById('finMonth').addEventListener('change', renderFinanceiro);
+document.getElementById('finFilterTipo').addEventListener('change', renderFinanceiro);
+document.getElementById('finFilterCategoria').addEventListener('change', renderFinanceiro);
+
+document.getElementById('btnIncludeCustosFin').addEventListener('click', async ()=>{
+  const monthStr = document.getElementById('finMonth').value || todayISO().slice(0,7);
+  const candidatos = [
+    ...fixedCostsForMonth(monthStr).map(c=> ({ ...c, dataMov: monthStr+'-01', categoriaMov:'Custo fixo' })),
+    ...variableCostsForMonth(monthStr).map(c=> ({ ...c, dataMov: c.data, categoriaMov:'Custo variável' }))
+  ];
+  let added = 0;
+  candidatos.forEach(c=>{
+    const jaExiste = state.financeiro.some(m=> m.custoId===c.id && m.competencia===monthStr);
+    if(jaExiste) return;
+    state.financeiro.push({
+      id: uid(), tipo:'saida', descricao:c.descricao, valor:c.valor, data:c.dataMov,
+      categoria:c.categoriaMov, custoId:c.id, competencia:monthStr
+    });
+    added++;
+  });
+  if(added === 0){ toast('Nenhum custo novo para incluir neste mês.', true); return; }
+  await persist();
+  toast(`${added} custo(s) do mês incluído(s) como saída.`);
+  renderFinanceiro();
+});
+
+document.getElementById('csvFinanceiro').addEventListener('click', ()=>{
+  const monthF = document.getElementById('finMonth').value;
+  let list = state.financeiro.slice().sort((a,b)=> (a.data||'').localeCompare(b.data||''));
+  if(monthF) list = list.filter(m=> monthKey(m.data)===monthF);
+  const rows = list.map(m=> [m.tipo==='entrada'?'Entrada':'Saída', m.descricao, m.valor.toFixed(2), fmtDate(m.data), m.categoria||'']);
+  const csv = toCsv(['Tipo','Descrição','Valor','Data','Categoria'], rows);
+  downloadBlob(csv, `financeiro${monthF?'-'+monthF:''}.csv`, 'text/csv;charset=utf-8');
+  toast('CSV do fluxo de caixa exportado.');
+});
+
+/* ========================================================
    DASHBOARD
    ======================================================== */
 function cashReceivedForMonth(monthStr){
@@ -1164,7 +1713,7 @@ function cashReceivedTotal(){
 
 function renderDashboard(){
   const now = new Date();
-  const curMonth = now.toISOString().slice(0,7);
+  const curMonth = todayISO().slice(0,7);
   const totalClients = state.clients.length;
   const newClientsMonth = state.clients.filter(c => monthKey(c.dataPrimeiroContato)===curMonth).length;
   const revenueMonth = cashReceivedForMonth(curMonth);
@@ -1204,6 +1753,357 @@ function renderDashboard(){
       <td class="money">${fmtMoney(s.valor)}</td>
     </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="em-ic">▤</div><div class="em-title">Nenhum contrato ainda</div>Assim que você registrar uma venda, ela aparece aqui.</div></td></tr>`;
 }
+
+/* ========================================================
+   RECIBOS — emissão mensal, arquivo e PDF
+   ======================================================== */
+const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const RECIBO_CONFIG_PADRAO = {
+  cidade:'Varginha', formaPagamento:'PIX - Nubank', cnpj:'57.137.967/0001-37', emitente:'Vanessa Costa Silva'
+};
+function reciboConfig(){ return Object.assign({}, RECIBO_CONFIG_PADRAO, state.reciboConfig || {}); }
+
+function nomeMes(refMes){
+  if(!refMes) return '';
+  const [y,m] = refMes.split('-').map(Number);
+  return `${MESES[m-1]} de ${y}`;
+}
+function dataExtensa(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-').map(Number);
+  return `${d} de ${MESES[m-1]} de ${y}`;
+}
+function proximoMes(refMes){
+  const [y,m] = refMes.split('-').map(Number);
+  return m===12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`;
+}
+function numeroRecibo(r){ return `${String(r.numero).padStart(3,'0')}/${r.ano}`; }
+function proximoNumero(ano){
+  const nums = state.recibos.filter(r=> r.ano===ano).map(r=> r.numero);
+  return nums.length ? Math.max(...nums) + 1 : 1;
+}
+
+/* Valor por extenso (reais e centavos) */
+const EXT_UNID = ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','quatorze','quinze','dezesseis','dezessete','dezoito','dezenove'];
+const EXT_DEZ = ['','','vinte','trinta','quarenta','cinquenta','sessenta','setenta','oitenta','noventa'];
+const EXT_CENT = ['','cento','duzentos','trezentos','quatrocentos','quinhentos','seiscentos','setecentos','oitocentos','novecentos'];
+function extensoAte999(n){
+  if(n === 100) return 'cem';
+  const c = Math.floor(n/100), r = n % 100;
+  const cp = c ? EXT_CENT[c] : '';
+  let rp = '';
+  if(r > 0) rp = r < 20 ? EXT_UNID[r] : EXT_DEZ[Math.floor(r/10)] + (r%10 ? ' e ' + EXT_UNID[r%10] : '');
+  return cp && rp ? `${cp} e ${rp}` : (cp || rp);
+}
+function extensoInteiro(n){
+  if(n === 0) return 'zero';
+  const mi = Math.floor(n/1000000), mil = Math.floor(n/1000) % 1000, resto = n % 1000;
+  const partes = [];
+  if(mi) partes.push({ k:'mi', v:mi, t: mi===1 ? 'um milhão' : extensoAte999(mi) + ' milhões' });
+  if(mil) partes.push({ k:'mil', v:mil, t: mil===1 ? 'mil' : extensoAte999(mil) + ' mil' });
+  if(resto) partes.push({ k:'r', v:resto, t: extensoAte999(resto) });
+  if(partes.length === 1) return partes[0].t;
+  const ultima = partes.pop();
+  const anterior = partes[partes.length-1];
+  // "e" antes da última parte quando ela é < 100 ou centena exata; senão vírgula após milhões e espaço após "mil"
+  const liga = (ultima.v < 100 || ultima.v % 100 === 0) ? ' e ' : (anterior.k === 'mi' ? ', ' : ' ');
+  return partes.map(p=>p.t).join(', ') + liga + ultima.t;
+}
+function valorPorExtenso(valor){
+  const total = Math.round((Number(valor)||0) * 100);
+  if(total === 0) return '';
+  const reais = Math.floor(total/100), cent = total % 100;
+  const partes = [];
+  if(reais > 0){
+    const de = (reais >= 1000000 && reais % 1000000 === 0) ? ' de' : '';
+    partes.push(`${extensoInteiro(reais)}${de} ${reais===1 ? 'real' : 'reais'}`);
+  }
+  if(cent > 0) partes.push(`${extensoInteiro(cent)} ${cent===1 ? 'centavo' : 'centavos'}`);
+  return partes.join(' e ');
+}
+
+/* ---------- Modal de emissão ---------- */
+let recExtensoManual = false;
+
+function fillReciboSelects(){
+  document.getElementById('recCliente').innerHTML =
+    '<option value="">— selecionar —</option>' + state.clients.map(c=> `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
+  document.getElementById('recContrato').innerHTML =
+    '<option value="">— selecionar —</option>' + state.sales.map(s=> `<option value="${s.id}">${escapeHtml(clientName(s.clienteId))} — ${escapeHtml(productName(s.produtoId))} (${fmtMoney(s.valor)})</option>`).join('');
+}
+
+function openReciboModal(rec, base){
+  fillReciboSelects();
+  const cfg = reciboConfig();
+  const src = rec || base || null;
+  document.getElementById('reciboModalTitle').textContent = rec ? `Editar recibo ${numeroRecibo(rec)}` : 'Novo recibo';
+  document.getElementById('recId').value = rec ? rec.id : '';
+  document.getElementById('recCliente').value = src && src.clienteId ? src.clienteId : '';
+  document.getElementById('recContrato').value = '';
+  document.getElementById('recNome').value = src ? src.pagadorNome : '';
+  document.getElementById('recTipoDoc').value = src ? (src.tipoDoc || 'CPF') : 'CPF';
+  document.getElementById('recDocumento').value = src ? (src.documento || '') : '';
+  document.getElementById('recValor').value = src ? src.valor : '';
+  document.getElementById('recExtenso').value = src ? (src.valorExtenso || '') : '';
+  recExtensoManual = !!(src && src.valorExtenso && src.valorExtenso !== valorPorExtenso(src.valor));
+  document.getElementById('recServico').value = src ? src.servico : '';
+  document.getElementById('recRefMes').value = src ? src.refMes : todayISO().slice(0,7);
+  document.getElementById('recData').value = src && src.dataEmissao ? src.dataEmissao : todayISO();
+  document.getElementById('recCidade').value = src && src.cidade ? src.cidade : cfg.cidade;
+  document.getElementById('recForma').value = src && src.formaPagamento ? src.formaPagamento : cfg.formaPagamento;
+  document.getElementById('recCnpj').value = src && src.cnpj ? src.cnpj : cfg.cnpj;
+  document.getElementById('recEmitente').value = src && src.emitente ? src.emitente : cfg.emitente;
+  openModal('reciboModal');
+}
+document.getElementById('btnNewRecibo').addEventListener('click', ()=> openReciboModal(null, null));
+
+document.getElementById('recValor').addEventListener('input', ()=>{
+  if(!recExtensoManual) document.getElementById('recExtenso').value = valorPorExtenso(document.getElementById('recValor').value);
+});
+document.getElementById('recExtenso').addEventListener('input', ()=>{ recExtensoManual = true; });
+
+document.getElementById('recCliente').addEventListener('change', (e)=>{
+  const c = state.clients.find(x=> x.id===e.target.value);
+  if(c) document.getElementById('recNome').value = c.nome;
+});
+document.getElementById('recContrato').addEventListener('change', (e)=>{
+  const s = state.sales.find(x=> x.id===e.target.value);
+  if(!s) return;
+  document.getElementById('recCliente').value = s.clienteId;
+  document.getElementById('recNome').value = clientName(s.clienteId);
+  document.getElementById('recValor').value = s.valor;
+  document.getElementById('recServico').value = productName(s.produtoId);
+  recExtensoManual = false;
+  document.getElementById('recExtenso').value = valorPorExtenso(s.valor);
+});
+
+function coletarRecibo(){
+  const nome = document.getElementById('recNome').value.trim();
+  const valor = parseFloat(document.getElementById('recValor').value) || 0;
+  if(!nome){ toast('Informe o nome de quem pagou.', true); return null; }
+  if(valor <= 0){ toast('Informe o valor recebido.', true); return null; }
+  const refMes = document.getElementById('recRefMes').value;
+  const dataEmissao = document.getElementById('recData').value;
+  if(!refMes){ toast('Informe o mês de referência.', true); return null; }
+  if(!dataEmissao){ toast('Informe a data de emissão.', true); return null; }
+  return {
+    clienteId: document.getElementById('recCliente').value || '',
+    pagadorNome: nome,
+    tipoDoc: document.getElementById('recTipoDoc').value,
+    documento: document.getElementById('recDocumento').value.trim(),
+    valor,
+    valorExtenso: document.getElementById('recExtenso').value.trim() || valorPorExtenso(valor),
+    servico: document.getElementById('recServico').value.trim(),
+    refMes, dataEmissao,
+    cidade: document.getElementById('recCidade').value.trim(),
+    formaPagamento: document.getElementById('recForma').value.trim(),
+    cnpj: document.getElementById('recCnpj').value.trim(),
+    emitente: document.getElementById('recEmitente').value.trim()
+  };
+}
+
+function salvarRecibo(gerarPdf){
+  const campos = coletarRecibo();
+  if(!campos) return;
+  const id = document.getElementById('recId').value;
+  let recibo;
+  if(id){
+    const idx = state.recibos.findIndex(r=> r.id===id);
+    recibo = Object.assign({}, state.recibos[idx], campos);
+    state.recibos[idx] = recibo;
+  } else {
+    const ano = Number(campos.dataEmissao.slice(0,4));
+    recibo = Object.assign({ id: uid(), numero: proximoNumero(ano), ano, criadoEm: new Date().toISOString() }, campos);
+    state.recibos.push(recibo);
+  }
+  // Lembra os dados do emitente/pagamento para os próximos recibos
+  state.reciboConfig = { cidade: campos.cidade, formaPagamento: campos.formaPagamento, cnpj: campos.cnpj, emitente: campos.emitente };
+  persist();
+  closeModal('reciboModal');
+  toast(id ? 'Recibo atualizado.' : `Recibo ${numeroRecibo(recibo)} emitido.`);
+  renderRecibos();
+  if(gerarPdf) gerarPdfRecibos([recibo]);
+}
+document.getElementById('saveRecibo').addEventListener('click', ()=> salvarRecibo(false));
+document.getElementById('saveReciboPdf').addEventListener('click', ()=> salvarRecibo(true));
+
+function deleteRecibo(id){
+  const r = state.recibos.find(x=> x.id===id);
+  if(!r || !confirm(`Excluir o recibo ${numeroRecibo(r)} de ${r.pagadorNome}? Esta ação remove o recibo do arquivo.`)) return;
+  state.recibos = state.recibos.filter(x=> x.id!==id);
+  persist();
+  toast('Recibo excluído.');
+  renderRecibos();
+}
+
+/* ---------- Listagem / arquivo ---------- */
+function recibosFiltrados(){
+  const busca = normalizeKey(document.getElementById('recSearch').value);
+  const mes = document.getElementById('recFilterMonth').value;
+  let list = state.recibos.slice().sort((a,b)=> (b.dataEmissao||'').localeCompare(a.dataEmissao||'') || b.numero - a.numero);
+  if(mes) list = list.filter(r=> r.refMes === mes);
+  if(busca) list = list.filter(r=> normalizeKey(r.pagadorNome + ' ' + r.servico).includes(busca));
+  return list;
+}
+
+function renderRecibos(){
+  const list = recibosFiltrados();
+  const total = list.reduce((s,r)=> s + (Number(r.valor)||0), 0);
+  const ultimo = state.recibos.slice().sort((a,b)=> (b.dataEmissao||'').localeCompare(a.dataEmissao||'') || b.numero - a.numero)[0];
+  document.getElementById('recStatCards').innerHTML = [
+    {label:'Recibos listados', value:list.length, hint:`${state.recibos.length} no arquivo`, gold:false},
+    {label:'Valor total listado', value:fmtMoney(total), hint:'Soma dos recibos exibidos abaixo', gold:true},
+    {label:'Último recibo emitido', value: ultimo ? numeroRecibo(ultimo) : '—', hint: ultimo ? `${ultimo.pagadorNome} · ${fmtDate(ultimo.dataEmissao)}` : 'Nenhum recibo ainda', gold:false},
+  ].map(c=>`
+    <div class="stat-card ${c.gold?'gold':''}">
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-value">${c.value}</div>
+      <div class="stat-hint">${escapeHtml(c.hint)}</div>
+    </div>`).join('');
+
+  const tbl = document.getElementById('recTable');
+  tbl.querySelector('thead').innerHTML = `<tr><th>Nº</th><th>Emissão</th><th>Pagador</th><th>Serviço</th><th>Referência</th><th>Valor</th><th></th></tr>`;
+  const tbody = tbl.querySelector('tbody');
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="em-ic">✎</div><div class="em-title">Nenhum recibo encontrado</div>Clique em "+ Novo recibo" para emitir o primeiro ou ajuste os filtros.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(r=>`
+    <tr>
+      <td class="num"><strong>${numeroRecibo(r)}</strong></td>
+      <td>${fmtDate(r.dataEmissao)}</td>
+      <td class="wrap"><strong>${escapeHtml(r.pagadorNome)}</strong></td>
+      <td class="wrap">${escapeHtml(r.servico || '—')}</td>
+      <td>${nomeMes(r.refMes)}</td>
+      <td class="money">${fmtMoney(r.valor)}</td>
+      <td><div class="rec-actions">
+        <button class="btn btn-outline btn-sm" data-rec-pdf="${r.id}">PDF</button>
+        <button class="btn btn-outline btn-sm" data-rec-next="${r.id}" title="Emitir o recibo do mês seguinte com os mesmos dados">Próx. mês</button>
+        <button class="icon-btn" data-rec-edit="${r.id}" title="Editar">✎</button>
+        <button class="icon-btn del" data-rec-del="${r.id}" title="Excluir">🗑</button>
+      </div></td>
+    </tr>`).join('');
+  const find = id => state.recibos.find(r=> r.id===id);
+  tbody.querySelectorAll('[data-rec-pdf]').forEach(b=> b.addEventListener('click', ()=> gerarPdfRecibos([find(b.dataset.recPdf)])));
+  tbody.querySelectorAll('[data-rec-next]').forEach(b=> b.addEventListener('click', ()=>{
+    const r = find(b.dataset.recNext);
+    openReciboModal(null, Object.assign({}, r, { refMes: proximoMes(r.refMes), dataEmissao: todayISO() }));
+  }));
+  tbody.querySelectorAll('[data-rec-edit]').forEach(b=> b.addEventListener('click', ()=> openReciboModal(find(b.dataset.recEdit), null)));
+  tbody.querySelectorAll('[data-rec-del]').forEach(b=> b.addEventListener('click', ()=> deleteRecibo(b.dataset.recDel)));
+}
+document.getElementById('recSearch').addEventListener('input', renderRecibos);
+document.getElementById('recFilterMonth').addEventListener('change', renderRecibos);
+document.getElementById('recClearFilters').addEventListener('click', ()=>{
+  document.getElementById('recSearch').value = '';
+  document.getElementById('recFilterMonth').value = '';
+  renderRecibos();
+});
+
+document.getElementById('csvRecibos').addEventListener('click', ()=>{
+  const rows = recibosFiltrados().reverse().map(r=> [
+    numeroRecibo(r), fmtDate(r.dataEmissao), r.pagadorNome, `${r.tipoDoc} ${r.documento||''}`.trim(),
+    r.servico, nomeMes(r.refMes), Number(r.valor).toFixed(2), r.formaPagamento
+  ]);
+  const csv = toCsv(['Nº','Emissão','Pagador','Documento','Serviço','Referência','Valor','Forma de pagamento'], rows);
+  downloadBlob(csv, 'recibos.csv', 'text/csv;charset=utf-8');
+  toast('CSV de recibos exportado.');
+});
+
+/* ---------- PDF ---------- */
+// Escreve um parágrafo com trechos em negrito, quebra de linha automática e justificação opcional.
+function pdfRich(doc, segs, x, y, maxW, lh, justify){
+  const units = [];
+  let pend = false;
+  segs.forEach(s=>{
+    (String(s.t).match(/\s+|\S+/g) || []).forEach(tok=>{
+      if(/^\s+$/.test(tok)){ pend = true; return; }
+      doc.setFont('helvetica', s.b ? 'bold' : 'normal');
+      const part = { w:tok, b:!!s.b, width:doc.getTextWidth(tok) };
+      if(pend || !units.length) units.push({ parts:[part], width:part.width });
+      else { const u = units[units.length-1]; u.parts.push(part); u.width += part.width; }
+      pend = false;
+    });
+  });
+  doc.setFont('helvetica', 'normal');
+  const sp = doc.getTextWidth(' ');
+  const lines = [];
+  let cur = [], curW = 0;
+  units.forEach(u=>{
+    const need = cur.length ? curW + sp + u.width : u.width;
+    if(cur.length && need > maxW){ lines.push(cur); cur = [u]; curW = u.width; }
+    else { cur.push(u); curW = need; }
+  });
+  if(cur.length) lines.push(cur);
+  lines.forEach((ln, i)=>{
+    const wordsW = ln.reduce((a,u)=> a + u.width, 0);
+    const gap = (justify && i < lines.length-1 && ln.length > 1) ? (maxW - wordsW) / (ln.length - 1) : sp;
+    let cx = x;
+    ln.forEach(u=>{
+      u.parts.forEach(p=>{ doc.setFont('helvetica', p.b ? 'bold' : 'normal'); doc.text(p.w, cx, y); cx += p.width; });
+      cx += gap;
+    });
+    y += lh;
+  });
+  return y;
+}
+
+function desenharRecibo(doc, r){
+  const L = 25, W = 160, BLANK = '____________________';
+  doc.setFontSize(12);
+  doc.setTextColor(22, 22, 22);
+  doc.setDrawColor(1, 81, 106); doc.setLineWidth(0.6); doc.rect(12, 12, 186, 273);
+
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(110, 110, 110);
+  doc.text(`Recibo nº ${numeroRecibo(r)}`, 185, 22, { align:'right' });
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(1, 81, 106);
+  doc.text('RECIBO DE PRESTAÇÃO DE SERVIÇO', 105, 42, { align:'center' });
+  doc.setDrawColor(201, 151, 62); doc.setLineWidth(0.8); doc.line(L, 48, L + W, 48);
+
+  doc.setFontSize(12); doc.setTextColor(22, 22, 22);
+  let y = 66;
+  y = pdfRich(doc, [
+    { t:'Recebi de ' }, { t:r.pagadorNome || BLANK, b:1 },
+    { t:` inscrito no ${r.tipoDoc || 'CPF'} sob o nº ` }, { t:r.documento || BLANK, b:1 },
+    { t:' a importância de ' }, { t:`${fmtMoney(r.valor)}${r.valorExtenso ? ' (' + r.valorExtenso + ')' : ''}`, b:1 },
+    { t:' referente à prestação de serviços de ' }, { t:r.servico || BLANK, b:1 },
+    { t:' referente ao mês de ' }, { t:nomeMes(r.refMes) || BLANK, b:1 }, { t:'.' }
+  ], L, y, W, 7.5, true);
+
+  y += 6;
+  y = pdfRich(doc, [{ t:'Forma de pagamento: ' }, { t:r.formaPagamento || BLANK, b:1 }], L, y, W, 7, false);
+  y = pdfRich(doc, [{ t:'CNPJ: ' }, { t:r.cnpj || BLANK, b:1 }], L, y, W, 7, false);
+  y = pdfRich(doc, [{ t:r.emitente || BLANK, b:1 }], L, y, W, 7, false);
+
+  y += 8;
+  y = pdfRich(doc, [{
+    t:'Declaro, para os devidos fins, que recebi a quantia acima especificada e dou plena, geral e irrevogável quitação pelo valor pago referente ao serviço descrito.'
+  }], L, y, W, 7.5, true);
+
+  y += 10;
+  doc.setFont('helvetica', 'normal');
+  doc.text(`${r.cidade || BLANK}, ${dataExtensa(r.dataEmissao) || '___ de _______ de _____'}`, L, y);
+
+  y += 32;
+  doc.setDrawColor(22, 22, 22); doc.setLineWidth(0.3); doc.line(65, y, 145, y);
+  doc.setFont('helvetica', 'bold');
+  doc.text(r.emitente || BLANK, 105, y + 7, { align:'center' });
+}
+
+function gerarPdfRecibos(lista){
+  const itens = (lista || []).filter(Boolean);
+  if(!itens.length){ toast('Nenhum recibo para gerar.', true); return; }
+  if(!window.jspdf){ toast('A biblioteca de PDF não carregou. Verifique a conexão com a internet e recarregue a página.', true); return; }
+  const doc = new window.jspdf.jsPDF();
+  itens.forEach((r, i)=>{ if(i > 0) doc.addPage(); desenharRecibo(doc, r); });
+  const nome = itens.length === 1
+    ? `recibo-${String(itens[0].numero).padStart(3,'0')}-${itens[0].ano}-${normalizeKey(itens[0].pagadorNome).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}.pdf`
+    : `recibos-${todayISO()}.pdf`;
+  doc.save(nome);
+  toast(itens.length === 1 ? 'PDF do recibo gerado.' : `PDF com ${itens.length} recibos gerado.`);
+}
+document.getElementById('pdfRecibosLista').addEventListener('click', ()=> gerarPdfRecibos(recibosFiltrados().reverse()));
 
 /* ========================================================
    PDF REPORTS
@@ -1339,8 +2239,10 @@ document.getElementById('csvSales').addEventListener('click', ()=>{
 
 document.getElementById('backupExport').addEventListener('click', ()=>{
   const backup = {
-    tipo: 'backup-gestao-dp', versao: 1, exportadoEm: new Date().toISOString(),
-    clients: state.clients, products: state.products, sales: state.sales
+    tipo: 'backup-gestao-dp', versao: 2, exportadoEm: new Date().toISOString(),
+    clients: state.clients, products: state.products, sales: state.sales,
+    customProductTypes: state.customProductTypes, custos: state.custos, financeiro: state.financeiro,
+    recibos: state.recibos, reciboConfig: state.reciboConfig
   };
   downloadBlob(JSON.stringify(backup, null, 2), `backup-gestao-dp-${todayISO()}.json`, 'application/json');
   toast('Backup exportado.');
@@ -1360,8 +2262,11 @@ document.getElementById('backupImportFile').addEventListener('change', (e)=>{
     if(!data || !Array.isArray(data.clients) || !Array.isArray(data.products) || !Array.isArray(data.sales)){
       toast('Arquivo não reconhecido como backup válido.', true); return;
     }
-    if(!confirm(`Este backup contém ${data.clients.length} cliente(s), ${data.products.length} produto(s) e ${data.sales.length} contrato(s). Isso vai SUBSTITUIR todos os dados atuais. Deseja continuar?`)) return;
+    if(!confirm(`Este backup contém ${data.clients.length} cliente(s), ${data.products.length} produto(s) e ${data.sales.length} contrato(s)${Array.isArray(data.recibos) ? ' e ' + data.recibos.length + ' recibo(s)' : ''}. Isso vai SUBSTITUIR todos os dados atuais. Deseja continuar?`)) return;
     state.clients = data.clients; state.products = data.products; state.sales = data.sales;
+    state.customProductTypes = data.customProductTypes || []; state.custos = data.custos || [];
+    state.financeiro = data.financeiro || []; state.recibos = data.recibos || [];
+    state.reciboConfig = data.reciboConfig || null;
     await persist();
     renderAll();
     toast('Backup importado com sucesso.');
@@ -1383,6 +2288,7 @@ function renderAll(){
   renderClients();
   renderProducts();
   renderSales();
+  renderRecibos();
 }
 
 /* ========================================================
@@ -1394,12 +2300,23 @@ function init(){
     state.clients = data.clients || [];
     state.products = data.products || [];
     state.sales = data.sales || [];
+    state.customProductTypes = data.customProductTypes || [];
+    state.custos = data.custos || [];
+    state.financeiro = data.financeiro || [];
+    state.recibos = data.recibos || [];
+    state.reciboConfig = data.reciboConfig || null;
   } else {
     state.clients = []; state.products = []; state.sales = [];
+    state.customProductTypes = []; state.custos = []; state.financeiro = [];
+    state.recibos = []; state.reciboConfig = null;
   }
   // Verifica se o localStorage está mesmo disponível/gravável neste contexto
   // (ex.: pré-visualização dentro do chat, modo privado, cota excedida).
-  const writable = Store.save({ clients: state.clients, products: state.products, sales: state.sales });
+  const writable = Store.save({
+    clients: state.clients, products: state.products, sales: state.sales,
+    customProductTypes: state.customProductTypes, custos: state.custos, financeiro: state.financeiro,
+    recibos: state.recibos, reciboConfig: state.reciboConfig
+  });
   if(!writable) updateSaveIndicator('error');
   renderAll();
 }

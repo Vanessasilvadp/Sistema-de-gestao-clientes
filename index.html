@@ -192,6 +192,9 @@
   .rec-details summary{cursor:pointer; font-size:12.5px; font-weight:600; color:var(--teal-900);}
   .rec-actions{display:flex; gap:6px; align-items:center;}
   .btn-sm{padding:6px 12px; font-size:12px;}
+  .check-inline{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--teal-900); cursor:pointer; padding:0 4px;}
+  .check-inline input{width:16px; height:16px; accent-color:var(--teal-900);}
+  .fin-origem{display:block; font-size:11.5px; color:var(--muted); font-weight:500; margin-top:2px;}
   tbody td.wrap{white-space:normal; min-width:110px; max-width:200px;}
 
   .empty-state{padding:50px 20px; text-align:center; color:var(--muted);}
@@ -465,6 +468,9 @@
           <option value="saida">Somente saídas</option>
         </select>
         <select id="finFilterCategoria"><option value="">Todas as categorias</option></select>
+        <label class="check-inline" title="Soma nas entradas o valor das recorrências do mês (previsto ou já recebido) e as vendas/contratos eventuais lançados no mês">
+          <input type="checkbox" id="finIncluirAuto"> Somar recorrências e vendas do mês nas entradas
+        </label>
       </div>
       <div class="panel">
         <div class="panel-head"><h3>Histórico de movimentos</h3></div>
@@ -843,7 +849,8 @@ function persist(){
     custos: state.custos,
     financeiro: state.financeiro,
     recibos: state.recibos,
-    reciboConfig: state.reciboConfig
+    reciboConfig: state.reciboConfig,
+    finConfig: state.finConfig
   });
   updateSaveIndicator(ok ? 'ok' : 'error');
 }
@@ -864,7 +871,7 @@ const PRODUCT_TYPES = {
 };
 const STATUS_LABELS = {lead:'Lead', prospect:'Prospect', ativo:'Cliente ativo', inativo:'Cliente inativo'};
 
-let state = { clients:[], products:[], sales:[], customProductTypes:[], custos:[], financeiro:[], recibos:[], reciboConfig:null, currentPage:'dashboard' };
+let state = { clients:[], products:[], sales:[], customProductTypes:[], custos:[], financeiro:[], recibos:[], reciboConfig:null, finConfig:{ incluirPrevistas:true }, currentPage:'dashboard' };
 
 // Normaliza um texto de tipo digitado: se corresponder (sem acento/maiúsculas) a um
 // tipo já existente (padrão ou customizado), reaproveita a mesma entrada — evitando duplicatas.
@@ -1591,21 +1598,75 @@ async function deleteMovimento(id){
   renderFinanceiro();
 }
 
+/* Entradas automáticas: recorrências do mês (previsto ou recebido) + vendas/contratos eventuais lançados no mês */
+function entradasAutomaticasMes(monthStr){
+  const itens = [];
+  const [y,m] = monthStr.split('-').map(Number);
+  const ultimoDia = new Date(y, m, 0).getDate();
+  recurringForMonth(monthStr).forEach(s=>{
+    const pay = paymentFor(s, monthStr);
+    const pago = !!(pay && pay.pago);
+    const venc = `${monthStr}-${String(Math.min(s.diaVencimento || 5, ultimoDia)).padStart(2,'0')}`;
+    itens.push({
+      origem:'recorrencia', mes:monthStr, saleId:s.id,
+      descricao:`${clientName(s.clienteId)} — ${productName(s.produtoId)}`,
+      valor: pago ? (Number(pay.valorPago)||0) : (Number(s.valor)||0),
+      data: pago && pay.dataPagamento ? pay.dataPagamento : venc,
+      status: pago ? 'recebido' : 'previsto', categoria:'Recorrência'
+    });
+  });
+  state.sales.filter(s=> s.tipo==='eventual' && monthKey(s.dataContratacao)===monthStr).forEach(s=>{
+    itens.push({
+      origem:'venda', mes:monthStr, saleId:s.id,
+      descricao:`${clientName(s.clienteId)} — ${productName(s.produtoId)}`,
+      valor: Number(s.valor)||0, data:s.dataContratacao, status:'lancado', categoria:'Venda/Contrato'
+    });
+  });
+  return itens;
+}
+function mesesEntre(ini, fim){
+  const out = [];
+  let [y,m] = ini.split('-').map(Number);
+  const [yf,mf] = fim.split('-').map(Number);
+  while((y < yf || (y === yf && m <= mf)) && out.length < 600){
+    out.push(`${y}-${String(m).padStart(2,'0')}`);
+    if(++m > 12){ m = 1; y++; }
+  }
+  return out;
+}
+function entradasAutomaticasAte(fimMes){
+  const meses = state.sales.map(s=> monthKey(s.dataContratacao)).filter(Boolean).sort();
+  if(!meses.length || meses[0] > fimMes) return [];
+  return mesesEntre(meses[0], fimMes).flatMap(entradasAutomaticasMes);
+}
+const somaValores = arr => arr.reduce((t,x)=> t + (Number(x.valor)||0), 0);
+function origemLabel(a){
+  if(a.origem === 'recorrencia') return a.status === 'recebido' ? 'Recorrência · recebido' : 'Recorrência · previsto';
+  return 'Venda/contrato lançado';
+}
+
 function renderFinanceiro(){
   const monthInput = document.getElementById('finMonth');
   const cardMonth = monthInput.value || todayISO().slice(0,7);
+  const incluirAuto = state.finConfig.incluirPrevistas !== false;
+  document.getElementById('finIncluirAuto').checked = incluirAuto;
 
-  const totalEntradasMes = state.financeiro.filter(m=> m.tipo==='entrada' && monthKey(m.data)===cardMonth).reduce((s,m)=> s+(Number(m.valor)||0), 0);
-  const totalSaidasMes = state.financeiro.filter(m=> m.tipo==='saida' && monthKey(m.data)===cardMonth).reduce((s,m)=> s+(Number(m.valor)||0), 0);
+  const manualEntradasMes = somaValores(state.financeiro.filter(m=> m.tipo==='entrada' && monthKey(m.data)===cardMonth));
+  const autoMes = incluirAuto ? entradasAutomaticasMes(cardMonth) : [];
+  const autoPrevisto = somaValores(autoMes.filter(a=> a.status==='previsto'));
+  const totalEntradasMes = manualEntradasMes + somaValores(autoMes);
+  const totalSaidasMes = somaValores(state.financeiro.filter(m=> m.tipo==='saida' && monthKey(m.data)===cardMonth));
   const saldoMes = totalEntradasMes - totalSaidasMes;
 
   const { monthEnd } = monthBounds(cardMonth);
-  const acumEntradas = state.financeiro.filter(m=> m.tipo==='entrada' && m.data && m.data<=monthEnd).reduce((s,m)=> s+(Number(m.valor)||0), 0);
-  const acumSaidas = state.financeiro.filter(m=> m.tipo==='saida' && m.data && m.data<=monthEnd).reduce((s,m)=> s+(Number(m.valor)||0), 0);
+  const acumEntradas = somaValores(state.financeiro.filter(m=> m.tipo==='entrada' && m.data && m.data<=monthEnd))
+    + (incluirAuto ? somaValores(entradasAutomaticasAte(cardMonth)) : 0);
+  const acumSaidas = somaValores(state.financeiro.filter(m=> m.tipo==='saida' && m.data && m.data<=monthEnd));
   const saldoAcumulado = acumEntradas - acumSaidas;
 
   document.getElementById('finStatCards').innerHTML = [
-    {label:'Entradas do mês', value:fmtMoney(totalEntradasMes), hint:cardMonth, gold:false},
+    {label:'Entradas do mês', value:fmtMoney(totalEntradasMes),
+      hint: incluirAuto ? `${cardMonth} · a receber (previsto): ${fmtMoney(autoPrevisto)}` : cardMonth, gold:false},
     {label:'Saídas do mês', value:fmtMoney(totalSaidasMes), hint:cardMonth, gold:false},
     {label:'Saldo líquido do mês', value:fmtMoney(saldoMes), hint: saldoMes>=0 ? 'Superávit no mês' : 'Déficit no mês', gold:true},
     {label:'Saldo acumulado', value:fmtMoney(saldoAcumulado), hint:'Até '+cardMonth, gold:false},
@@ -1618,22 +1679,34 @@ function renderFinanceiro(){
 
   const catSel = document.getElementById('finFilterCategoria');
   const curCat = catSel.value;
-  const cats = [...new Set(state.financeiro.map(m=>m.categoria).filter(Boolean))].sort();
+  const cats = [...new Set([...state.financeiro.map(m=>m.categoria), ...(incluirAuto ? ['Recorrência','Venda/Contrato'] : [])].filter(Boolean))].sort();
   catSel.innerHTML = '<option value="">Todas as categorias</option>' + cats.map(c=> `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-  catSel.value = curCat;
+  catSel.value = cats.includes(curCat) ? curCat : '';
 
   const monthF = monthInput.value;
   const tipoF = document.getElementById('finFilterTipo').value;
   const catF = document.getElementById('finFilterCategoria').value;
-  let list = state.financeiro.slice().sort((a,b)=> (b.data||'').localeCompare(a.data||''));
-  if(monthF) list = list.filter(m=> monthKey(m.data)===monthF);
+  const manuais = state.financeiro.filter(m=> !monthF || monthKey(m.data)===monthF);
+  const autos = !incluirAuto ? [] : (monthF ? entradasAutomaticasMes(monthF) : entradasAutomaticasAte(cardMonth))
+    .map(a=> Object.assign({}, a, { auto:true, tipo:'entrada', id:`auto-${a.origem}-${a.saleId}-${a.mes}` }));
+  let list = [...manuais, ...autos].sort((a,b)=> (b.data||'').localeCompare(a.data||''));
   if(tipoF) list = list.filter(m=> m.tipo===tipoF);
   if(catF) list = list.filter(m=> m.categoria===catF);
 
   const tbl = document.getElementById('finTable');
   tbl.querySelector('thead').innerHTML = `<tr><th>Tipo</th><th>Descrição</th><th>Categoria</th><th>Data</th><th>Valor</th><th></th></tr>`;
   const tbody = tbl.querySelector('tbody');
-  tbody.innerHTML = list.length ? list.map(m=>`
+  tbody.innerHTML = list.length ? list.map(m=> m.auto ? `
+    <tr>
+      <td><span class="badge badge-entrada">Entrada</span></td>
+      <td><strong>${escapeHtml(m.descricao)}</strong><span class="fin-origem">${origemLabel(m)}</span></td>
+      <td>${m.categoria}</td>
+      <td>${fmtDate(m.data)}</td>
+      <td class="money">${fmtMoney(m.valor)}</td>
+      <td><div class="row-actions">
+        <button class="icon-btn" data-auto-go="${m.origem}|${m.mes}" title="${m.origem==='recorrencia' ? 'Abrir em Recorrências' : 'Abrir em Vendas / Contratos'}">↗</button>
+      </div></td>
+    </tr>` : `
     <tr>
       <td><span class="badge badge-${m.tipo}">${m.tipo==='entrada'?'Entrada':'Saída'}</span></td>
       <td><strong>${escapeHtml(m.descricao)}</strong></td>
@@ -1647,7 +1720,17 @@ function renderFinanceiro(){
     </tr>`).join('') : `<tr><td colspan="6"><div class="empty-state"><div class="em-ic">$</div><div class="em-title">Nenhum movimento encontrado</div>Registre uma entrada ou saída, ou ajuste os filtros.</div></td></tr>`;
   tbody.querySelectorAll('[data-edit-mov]').forEach(b=> b.addEventListener('click', ()=> openMovimentoModal(state.financeiro.find(m=>m.id===b.dataset.editMov))));
   tbody.querySelectorAll('[data-del-mov]').forEach(b=> b.addEventListener('click', ()=> deleteMovimento(b.dataset.delMov)));
+  tbody.querySelectorAll('[data-auto-go]').forEach(b=> b.addEventListener('click', ()=>{
+    const [origem, mes] = b.dataset.autoGo.split('|');
+    if(origem === 'recorrencia'){ document.getElementById('recorrMonth').value = mes; goToPage('recorrencias'); }
+    else { document.getElementById('filterSaleMonth').value = mes; goToPage('vendas'); }
+  }));
 }
+document.getElementById('finIncluirAuto').addEventListener('change', (e)=>{
+  state.finConfig.incluirPrevistas = e.target.checked;
+  persist();
+  renderFinanceiro();
+});
 document.getElementById('finMonth').addEventListener('change', renderFinanceiro);
 document.getElementById('finFilterTipo').addEventListener('change', renderFinanceiro);
 document.getElementById('finFilterCategoria').addEventListener('change', renderFinanceiro);
@@ -1676,10 +1759,14 @@ document.getElementById('btnIncludeCustosFin').addEventListener('click', async (
 
 document.getElementById('csvFinanceiro').addEventListener('click', ()=>{
   const monthF = document.getElementById('finMonth').value;
-  let list = state.financeiro.slice().sort((a,b)=> (a.data||'').localeCompare(b.data||''));
-  if(monthF) list = list.filter(m=> monthKey(m.data)===monthF);
-  const rows = list.map(m=> [m.tipo==='entrada'?'Entrada':'Saída', m.descricao, m.valor.toFixed(2), fmtDate(m.data), m.categoria||'']);
-  const csv = toCsv(['Tipo','Descrição','Valor','Data','Categoria'], rows);
+  const incluirAuto = state.finConfig.incluirPrevistas !== false;
+  const manuais = state.financeiro.filter(m=> !monthF || monthKey(m.data)===monthF)
+    .map(m=> ({ tipo:m.tipo, descricao:m.descricao, valor:m.valor, data:m.data, categoria:m.categoria||'', origem:'Lançamento manual' }));
+  const autos = !incluirAuto ? [] : (monthF ? entradasAutomaticasMes(monthF) : entradasAutomaticasAte(todayISO().slice(0,7)))
+    .map(a=> ({ tipo:'entrada', descricao:a.descricao, valor:a.valor, data:a.data, categoria:a.categoria, origem:origemLabel(a) }));
+  const list = [...manuais, ...autos].sort((a,b)=> (a.data||'').localeCompare(b.data||''));
+  const rows = list.map(m=> [m.tipo==='entrada'?'Entrada':'Saída', m.descricao, Number(m.valor).toFixed(2), fmtDate(m.data), m.categoria, m.origem]);
+  const csv = toCsv(['Tipo','Descrição','Valor','Data','Categoria','Origem'], rows);
   downloadBlob(csv, `financeiro${monthF?'-'+monthF:''}.csv`, 'text/csv;charset=utf-8');
   toast('CSV do fluxo de caixa exportado.');
 });
@@ -2242,7 +2329,7 @@ document.getElementById('backupExport').addEventListener('click', ()=>{
     tipo: 'backup-gestao-dp', versao: 2, exportadoEm: new Date().toISOString(),
     clients: state.clients, products: state.products, sales: state.sales,
     customProductTypes: state.customProductTypes, custos: state.custos, financeiro: state.financeiro,
-    recibos: state.recibos, reciboConfig: state.reciboConfig
+    recibos: state.recibos, reciboConfig: state.reciboConfig, finConfig: state.finConfig
   };
   downloadBlob(JSON.stringify(backup, null, 2), `backup-gestao-dp-${todayISO()}.json`, 'application/json');
   toast('Backup exportado.');
@@ -2267,6 +2354,7 @@ document.getElementById('backupImportFile').addEventListener('change', (e)=>{
     state.customProductTypes = data.customProductTypes || []; state.custos = data.custos || [];
     state.financeiro = data.financeiro || []; state.recibos = data.recibos || [];
     state.reciboConfig = data.reciboConfig || null;
+    state.finConfig = Object.assign({ incluirPrevistas:true }, data.finConfig || {});
     await persist();
     renderAll();
     toast('Backup importado com sucesso.');
@@ -2305,17 +2393,18 @@ function init(){
     state.financeiro = data.financeiro || [];
     state.recibos = data.recibos || [];
     state.reciboConfig = data.reciboConfig || null;
+    state.finConfig = Object.assign({ incluirPrevistas:true }, data.finConfig || {});
   } else {
     state.clients = []; state.products = []; state.sales = [];
     state.customProductTypes = []; state.custos = []; state.financeiro = [];
-    state.recibos = []; state.reciboConfig = null;
+    state.recibos = []; state.reciboConfig = null; state.finConfig = { incluirPrevistas:true };
   }
   // Verifica se o localStorage está mesmo disponível/gravável neste contexto
   // (ex.: pré-visualização dentro do chat, modo privado, cota excedida).
   const writable = Store.save({
     clients: state.clients, products: state.products, sales: state.sales,
     customProductTypes: state.customProductTypes, custos: state.custos, financeiro: state.financeiro,
-    recibos: state.recibos, reciboConfig: state.reciboConfig
+    recibos: state.recibos, reciboConfig: state.reciboConfig, finConfig: state.finConfig
   });
   if(!writable) updateSaveIndicator('error');
   renderAll();
